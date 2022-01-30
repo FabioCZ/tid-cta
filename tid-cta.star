@@ -55,7 +55,7 @@ def firstPred(preds):
     if len(preds) > 0:
         return preds[0]
     else:
-        return ""
+        return "nothin'"
 
 def otherPreds(preds):
     if len(preds) == 0:
