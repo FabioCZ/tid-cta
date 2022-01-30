@@ -1,7 +1,9 @@
 load("render.star", "render")
 load("http.star", "http")
+load("re.star", "re")
 
-CTA_MAP_BLUE_LINE_URL = "https://www.transitchicago.com/traintracker/PredictionMap/tmTrains.aspx?line=B&MaxPredictions=10"
+# For some reason https sometimes fails
+CTA_MAP_BLUE_LINE_URL = "http://www.transitchicago.com/traintracker/PredictionMap/tmTrains.aspx?line=B&MaxPredictions=20"
 TARGET_STATION = 40570.0
 
 def hasTargetPrediction(preds):
@@ -9,7 +11,7 @@ def hasTargetPrediction(preds):
     return len(match) == 1
 
 def sorter(k):
-    raw = k.split("/")[0]
+    raw = re.findall(r'\d+', k)[0]
     return int(raw)
 
 def getPredPairs(markers):
@@ -18,23 +20,49 @@ def getPredPairs(markers):
         time = ""
         remark = ""
         if x["DestName"] == "Rosemont":
-            remark = "/R"
+            remark = "R"
         elif x["DestName"] == "Jefferson Park":
-            remark = "/J"
+            remark = "J"
         elif x["DestName"].startswith("UIC"):
-            remark = "/U"
+            remark = "U"
         elif x["DestName"].startswith("O'Hare") or x["DestName"] == "Forest Park":
             remark = ""
         else:
-            remark = "/!"
+            remark = "!"
         pred = [y for y in x["Predictions"] if y[0] == TARGET_STATION][0][2]
         if pred == "<b>Due</b>":
-            time = "1"
+            time = "0"
         else:
-            time = pred.split(">")[1].split("<")[0]
+            timeInt = int(re.findall(r'\d+', pred)[0])
+            time = str(timeInt - 1) #adj by -1 for better predictions due to sever delay
         preds.append(time + remark)
     return sorted(preds, key=sorter)
 
+def renderLine(rr, dest, arrivals):
+    render.Row(
+        children = [
+            render.Box(width = 1, height = 1),
+            render.Box(width = 20, height = 15, color="#0af",
+                child=render.Text(content = dest, font = "6x13", height = 13, color = "#fff")
+            ),
+            render.Marquee(width=43,
+                child=render.Text(content = arrivals, font = "6x13", height = 15)
+            )
+        ]
+    )
+
+def firstPred(preds):
+    if len(preds) > 0:
+        return preds[0]
+    else:
+        return ""
+
+def otherPreds(preds):
+    if len(preds) == 0:
+        return ""
+    predsCopy = list(preds)
+    predsCopy.pop(0)
+    return ",".join(predsCopy)
 
 def main():
     rep = http.get(CTA_MAP_BLUE_LINE_URL)
@@ -52,19 +80,36 @@ def main():
     return render.Root(
         render.Column(
             children = [
+                render.Box(width = 1, height = 1, color="#000"),
                 render.Row(
                     children = [
-                        render.Box(width = 2, height = 13),
-                        render.Text(content = "ORD:", font = "6x13", height = 13, color = "#0af"),
-                        render.WrappedText(content = ",".join(predsOhare), font = "6x13", height = 15)
+                        render.Box(width = 1, height = 1, color="#000"),
+                        render.Box(width = 19, height = 13, color="#0af",
+                            child=render.Text(content = "ORD", font = "6x13", color = "#fff")
+                        ),
+                        render.Box(width = 2, height = 1, color="#000"),
+                        render.Text(content=firstPred(predsOhare), height=13, font = "6x13", color="#fb0"),
+                        render.Box(width = 1, height = 1, color="#000"),
+                        render.Marquee(width=40,
+                            child=render.Text(content = otherPreds(predsOhare), height=12)
+                        )
                     ]
                 ),
-                render.Box(height = 1, color = "#fff", padding = 1),
+                render.Box(height = 1, color = "#000"),
+                render.Box(height = 2, color = "#aaa"),
+                render.Box(width = 1, height = 1, color="#000"),
                 render.Row(
                     children = [
-                        render.Box(width = 2, height = 13),
-                        render.Text(content = "F P:", font = "6x13", height = 13, color = "#0af"),
-                        render.WrappedText(content = ",".join(predsFP), font = "6x13", height = 15)
+                        render.Box(width = 1, height = 1, color="#000"),
+                        render.Box(width = 19, height = 13, color="#0af",
+                            child=render.Text(content = "FP", font = "6x13", color = "#fff")
+                        ),
+                        render.Box(width = 2, height = 1, color="#000"),
+                        render.Text(content=firstPred(predsFP), height=13, font = "6x13", color="#fb0"),
+                        render.Box(width = 1, height = 1, color="#000"),
+                        render.Marquee(width=40,
+                            child=render.Text(content = otherPreds(predsFP), height=12)
+                        )
                     ]
                 )
             ]
