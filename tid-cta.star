@@ -64,6 +64,72 @@ def otherPreds(preds):
     predsCopy.pop(0)
     return ",".join(predsCopy)
 
+def renderPreds(r, destName, preds):
+    return r.Row(
+        children = [
+            r.Box(width = 1, height = 1, color="#000"),
+            r.Box(width = 19, height = 13, color="#0af",
+                child=r.Text(content = destName, font = "6x13", color = "#fff")
+            ),
+            r.Box(width = 2, height = 1, color="#000"),
+            r.Text(content=firstPred(preds), height=13, font = "6x13", color="#fb0"),
+            r.Box(width = 1, height = 1, color="#000"),
+            r.Marquee(width=40,
+                child=r.Text(content = otherPreds(preds), height=12)
+            )
+        ]
+    )
+
+def renderTrainFrame(r, offset):
+    return r.Row(
+        children = [
+            r.Box(width=offset, height=3, color="#000"),
+            r.Column(
+                children = [
+                    r.Box(width=6, height=2, color="#888"),
+                    r.Row(
+                        children = [
+                            r.Box(width=1,height=1,color="#000"),
+                            r.Box(width=1,height=1,color="#888"),
+                            r.Box(width=2,height=1,color="#000"),
+                            r.Box(width=1,height=1,color="#888")
+                        ]
+                    )
+                ]
+            ),
+            r.Column(
+                children = [
+                    r.Box(width=1,height=1,color="#000"),
+                    r.Box(width=1,height=1,color="#888")
+                ]
+            ),
+            r.Column(
+                children = [
+                    r.Box(width=6, height=2, color="#888"),
+                    r.Row(
+                        children = [
+                            r.Box(width=1,height=1,color="#000"),
+                            r.Box(width=1,height=1,color="#888"),
+                            r.Box(width=2,height=1,color="#000"),
+                            r.Box(width=1,height=1,color="#888")
+                        ]
+                    )
+                ]
+            ),
+        ]
+    )
+
+
+def renderAnimatedTrain(r):
+    frames = []
+    for i in range(59,0,-1):
+        frames.append(renderTrainFrame(r,i))
+        frames.append(renderTrainFrame(r,i))
+        
+    return r.Animation(
+        children = frames
+    )
+
 def main():
     rep = http.get(CTA_MAP_BLUE_LINE_URL)
     if rep.status_code != 200:
@@ -81,37 +147,12 @@ def main():
         render.Column(
             children = [
                 render.Box(width = 1, height = 1, color="#000"),
-                render.Row(
-                    children = [
-                        render.Box(width = 1, height = 1, color="#000"),
-                        render.Box(width = 19, height = 13, color="#0af",
-                            child=render.Text(content = "ORD", font = "6x13", color = "#fff")
-                        ),
-                        render.Box(width = 2, height = 1, color="#000"),
-                        render.Text(content=firstPred(predsOhare), height=13, font = "6x13", color="#fb0"),
-                        render.Box(width = 1, height = 1, color="#000"),
-                        render.Marquee(width=40,
-                            child=render.Text(content = otherPreds(predsOhare), height=12)
-                        )
-                    ]
-                ),
-                render.Box(height = 1, color = "#000"),
-                render.Box(height = 2, color = "#aaa"),
-                render.Box(width = 1, height = 1, color="#000"),
-                render.Row(
-                    children = [
-                        render.Box(width = 1, height = 1, color="#000"),
-                        render.Box(width = 19, height = 13, color="#0af",
-                            child=render.Text(content = "FP", font = "6x13", color = "#fff")
-                        ),
-                        render.Box(width = 2, height = 1, color="#000"),
-                        render.Text(content=firstPred(predsFP), height=13, font = "6x13", color="#fb0"),
-                        render.Box(width = 1, height = 1, color="#000"),
-                        render.Marquee(width=40,
-                            child=render.Text(content = otherPreds(predsFP), height=12)
-                        )
-                    ]
-                )
+                renderPreds(render,"ORD",predsOhare),
+                renderAnimatedTrain(render),
+                # render.Box(height = 1, color = "#000"),
+                # render.Box(height = 2, color = "#aaa"),
+                render.Box(height = 1, color="#333"),
+                renderPreds(render,"FP",predsFP)
             ]
         )
     )
