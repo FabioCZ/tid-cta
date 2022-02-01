@@ -69,7 +69,12 @@ def renderPreds(r, destName, preds):
         children = [
             r.Box(width = 1, height = 1, color="#000"),
             r.Box(width = 19, height = 13, color="#0af",
-                child=r.Text(content = destName, font = "6x13", color = "#fff")
+                child=r.Row(
+                    children = [
+                        r.Box(width=1,height=1,color="#0af"),
+                        r.Text(content = destName, font = "6x13", color = "#fff")
+                    ]
+                )
             ),
             r.Box(width = 2, height = 1, color="#000"),
             r.Text(content=firstPred(preds), height=13, font = "6x13", color="#fb0"),
@@ -125,7 +130,7 @@ def renderAnimatedTrain(r):
     for i in range(59,0,-1):
         frames.append(renderTrainFrame(r,i))
         frames.append(renderTrainFrame(r,i))
-        
+
     return r.Animation(
         children = frames
     )
